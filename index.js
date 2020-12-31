@@ -34,7 +34,7 @@ options.templateCallback = function(templateName,stage,data) {
         // 获取参数Schema
         let contents = Object.values(data.resources)
             .flatMap(o => Object.values(o.methods))
-            .flatMap(o => Object.values(o.pathItem).flatMap(v=>[v.requestBody].concat(Object.values(v.responses))))
+            .flatMap(o => Object.values(o.pathItem).flatMap(v=>[v.requestBody].concat(Object.values(v.responses || {}))))
             .filter(o => !!o)
             .flatMap(o => Object.values(o.content))
             .filter(o => !!o && o.schema);
@@ -46,7 +46,7 @@ options.templateCallback = function(templateName,stage,data) {
             if (!o || !o.allOf || Object.keys(o).filter(o => o.endsWith('Of')).length > 1) {
                 return o;
             }
-            let schema = o.allOf.reduce((acc,v) => Object.assign({}, acc, v, {properties: Object.assign({}, acc.properties, v.properties)}), {type:'object'});
+            let schema = o.allOf.reduce((acc,v) => Object.assign({}, acc, v, {properties: Object.assign({}, acc.properties || {}, v.properties || {})}), {type:'object'});
             delete schema[keyOldRef]
             toRef(schema)
             if (schema.properties) {

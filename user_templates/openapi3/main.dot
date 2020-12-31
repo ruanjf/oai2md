@@ -8,7 +8,7 @@
 {{? data.api.servers }}
 Base URLs:
 {{~data.api.servers :s}}
-* <a href="{{=s.url}}">{{=s.url}}</a>
+* <a href="{{=s.url}}">{{=s.url}}</a> - {{=s.description}}
 {{ for(var v in s.variables) { }}
     * **{{=v}}** - {{=s.variables[v].description||''}} Default: {{=s.variables[v].default}}
 {{? s.variables[v].enum}}
