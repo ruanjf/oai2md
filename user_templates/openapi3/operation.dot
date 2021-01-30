@@ -3,6 +3,7 @@
 ## {{= data.operationUniqueName}}
 
 {{? data.operation.operationId}}
+操作标识：`{{= data.operation.operationId }}`
 <a id="opId{{=data.operation.operationId}}"></a>
 {{?}}
 

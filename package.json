@@ -3,12 +3,17 @@
   "version": "1.0.0",
   "description": "OpenAPI to Markdown",
   "main": "index.js",
+  "bin": {
+    "oai2md": "./bin/oai2md"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
-  "engines" : { "node" : ">=11.0" },
+  "engines": {
+    "node": ">=11.0"
+  },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.0.2",
     "widdershins": "^4.0.1",

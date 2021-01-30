@@ -18,6 +18,9 @@ options.user_templates = './user_templates/openapi3';
 options.source = sourceUrl;
 options.templateCallback = function(templateName,stage,data) {
     if (stage === 'pre') {
+        data.utils.dashToCamel = s => {
+            return s.replace(/-\w/g, m => m.substring(1).toUpperCase())
+        }
         let keyTagBaseUrl = 'x-base-url';
         for (let tag of data.api.tags) {
             let tbu = tag[keyTagBaseUrl];
