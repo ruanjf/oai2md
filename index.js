@@ -14,7 +14,8 @@ options.codeSamples = false;
 options.tocSummary = true;
 options.omitHeader = true;
 options.sample = true;
-options.user_templates = './user_templates/openapi3';
+#options.user_templates = './user_templates/openapi3';
+options.user_templates = path.resolve(__dirname, 'user_templates', 'openapi3');
 options.source = sourceUrl;
 options.templateCallback = function(templateName,stage,data) {
     if (stage === 'pre') {

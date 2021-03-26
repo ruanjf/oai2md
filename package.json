@@ -2,6 +2,10 @@
   "name": "oai2md",
   "version": "1.0.0",
   "description": "OpenAPI to Markdown",
+  "homepage"      : "http://www.runjf.com",
+  "keywords"      : ["openapi", "markdown", "transform"],
+  "author"        : "ruanjiefeng <ruanjiefeng@gmail.com>",
+  "repository"    : {"type": "git", "url": "git@github.com:ruanjf/oai2md.git"},
   "main": "index.js",
   "bin": {
     "oai2md": "./bin/oai2md"
@@ -9,7 +13,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
   "license": "ISC",
   "engines": {
     "node": ">=11.0"
