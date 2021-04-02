@@ -14,7 +14,7 @@ options.codeSamples = false;
 options.tocSummary = true;
 options.omitHeader = true;
 options.sample = true;
-#options.user_templates = './user_templates/openapi3';
+// options.user_templates = './user_templates/openapi3';
 options.user_templates = path.resolve(__dirname, 'user_templates', 'openapi3');
 options.source = sourceUrl;
 options.templateCallback = function(templateName,stage,data) {
@@ -39,7 +39,7 @@ options.templateCallback = function(templateName,stage,data) {
         let contents = Object.values(data.resources)
             .flatMap(o => Object.values(o.methods))
             .flatMap(o => Object.values(o.pathItem).flatMap(v=>[v.requestBody].concat(Object.values(v.responses || {}))))
-            .filter(o => !!o)
+            .filter(o => !!o && o.content)
             .flatMap(o => Object.values(o.content))
             .filter(o => !!o && o.schema);
         // 去重
