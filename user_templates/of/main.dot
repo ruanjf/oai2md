@@ -1,0 +1,141 @@
+<!-- Generator: Widdershins v{{=data.widdershins.version}} -->
+
+{{= data.tags.section }}
+# {{=data.api.info && data.api.info.title}} {{=data.version}}
+
+{{? data.api.info && data.api.info.description}}{{=data.api.info.description}}{{?}}
+
+{{? data.api.servers }}
+Base URLs:
+{{~data.api.servers :s}}
+* <a href="{{=s.url}}">{{=s.url}}</a> - {{=s.description}}
+{{ for(var v in s.variables) { }}
+    * **{{=v}}** - {{=s.variables[v].description||''}} Default: {{=s.variables[v].default}}
+{{? s.variables[v].enum}}
+{{~ s.variables[v].enum :e}}
+        * {{= e}}
+{{~}}
+{{?}}
+{{ } }}
+{{~}}
+{{?}}
+
+{{? data.api.info && data.api.info.termsOfService}}<a href="{{=data.api.info.termsOfService}}">Terms of service</a>{{?}}
+{{? data.api.info && data.api.info.contact}}{{? data.api.info.contact.email}}Email: <a href="mailto:{{=data.api.info.contact.email}}">{{=data.api.info.contact.name || 'Support'}}</a> {{?}}{{? data.api.info.contact.url}}Web: <a href="{{=data.api.info.contact.url}}">{{= data.api.info.contact.name || 'Support'}}</a> {{?}}{{?}}
+{{? data.api.info && data.api.info.license}}{{? data.api.info.license.url}}License: <a href="{{=data.api.info.license.url}}">{{=data.api.info.license.name}}</a>{{??}} License: {{=data.api.info.license.name}}{{?}}{{?}}
+{{= data.tags.endSection }}
+
+{{? data.api.components && data.api.components.securitySchemes }}
+{{#def.security}}
+{{?}}
+
+## Paths
+
+{{ for (var r in data.resources) { }}
+{{ data.resource = data.resources[r]; }}
+
+{{= data.tags.section }}
+
+{{? data.resource.description }}<!-- {{= data.resource.description}} -->{{?}}
+
+{{? data.resource.externalDocs}}
+<a href="{{=data.resource.externalDocs.url}}">{{=data.resource.externalDocs.description||'External documentation'}}</a>
+{{?}}
+
+{{ for (var m in data.resource.methods) { }}
+{{ data.operationUniqueName = m; }}
+{{ data.method = data.resource.methods[m]; }}
+{{ data.operationUniqueSlug = data.method.slug; }}
+{{ data.operation = data.method.operation; }}
+{{= data.templates.operation(data) }}
+{{ } /* of methods */ }}
+
+{{= data.tags.endSection }}
+{{ } /* of resources */ }}
+
+{{? data.api.components && data.api.components.schemas }}
+{{= data.tags.section }}
+
+## Schemas
+
+{{ for (var s in data.components.schemas) { }}
+{{ var origSchema = data.components.schemas[s]; }}
+{{ var schema = data.api.components.schemas[s]; }}
+
+{{= data.tags.section }}
+### {{=s}}
+{{? schema.description }}
+<!-- [{{= schema.description }}]({{= s }}) -->
+{{?}}
+
+{{ var enums = []; }}
+{{ var blocks = data.utils.schemaToArray(origSchema,-1,{trim:true,join:true},data); }}
+{{ for (var block of blocks) {
+     for (var p of block.rows) {
+       if (p.schema && p.schema.enum) {
+         var i=0;
+         var ds = p.schema['x-enum-descriptions'] || new Array(p.schema.enum.length);
+         for (var e of p.schema.enum) {
+           enums.push({name:p.name, value:e, description: ds[i]||''});
+           i++;
+         }
+       }
+     }
+   }
+}}
+
+{{~ blocks :block}}
+{{? block.title }}{{= block.title}}{{= '\n\n'}}{{?}}
+{{? block.externalDocs}}
+<a href="{{=block.externalDocs.url}}">{{=block.externalDocs.description||'External documentation'}}</a>
+{{?}}
+
+{{? block===blocks[0] }}
+{{= data.tags.section }}
+
+{{? data.options.yaml }}
+```yaml
+{{=data.utils.yaml.stringify(data.utils.getSample(schema,data.options,{quiet:true},data.api))}}
+{{??}}
+```json
+{{=data.utils.safejson(data.utils.getSample(schema,data.options,{quiet:true},data.api),null,2)}}
+{{?}}
+```
+
+字段列表
+{{?}}
+
+{{? block.rows.length}}|字段|类型|必须|限制|说明|
+|---|---|---|---|---|{{?}}
+{{~ block.rows :p}}|{{=p.displayName}}|{{=p.safeType}}|{{=p.required}}|{{=p.restrictions||'none'}}|{{=p.description||'none'}}|
+{{~}}
+{{~}}
+{{? (blocks[0].rows.length === 0) && (blocks.length === 1) }}
+*None*
+{{?}}
+
+{{? enums.length > 0 }}
+{{= data.tags.section }}
+
+#### 枚举值
+
+|字段|值|说明|
+|---|---|---|
+{{~ enums :e}}|{{=e.name}}|{{=data.utils.toPrimitive(e.value)}}|{{=e.description}}|
+{{~}}
+
+{{= data.tags.endSection }}
+{{?}}
+
+{{= data.tags.endSection }}
+{{= data.tags.endSection }}
+
+{{ } /* of schemas */ }}
+
+{{?}}
+
+{{#def.footer}}
+
+{{? data.options.discovery}}
+{{#def.discovery}}
+{{?}}

@@ -27,6 +27,7 @@
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.0.2",
     "widdershins": "^4.0.1",
-    "yaml": "^1.10.0"
+    "yaml": "^1.10.0",
+    "yargs": "^16.2.0"
   }
 }

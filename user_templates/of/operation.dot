@@ -1,0 +1,64 @@
+{{= data.tags.section }}
+{{? data.resources && data.operation.tags && data.operation.tags.length > 0 }}
+<!-- [{{= data.resources[data.operation.tags[0]].description }}]({{= data.operation.tags[0] }}) -->
+{{?}}
+
+### {{= data.operationUniqueName}}
+
+{{ data.methodUpper = data.method.verb.toUpperCase(); }}
+{{ data.url = data.utils.slashes(data.baseUrl + data.method.path); }}
+{{ data.parameters = data.operation.parameters; }}
+{{ data.enums = []; }}
+{{ data.utils.fakeProdCons(data); }}
+{{ data.utils.fakeBodyParameter(data); }}
+{{ data.utils.mergePathParameters(data); }}
+{{ data.utils.getParameters(data); }}
+
+{{? data.operation.description}}{{= data.operation.description }}{{?}}
+
+{{? data.options.codeSamples || data.operation["x-code-samples"] }}
+> Code samples
+
+{{= data.utils.getCodeSamples(data) }}
+{{?}}
+
+#### 接口地址
+
+`{{= data.methodUpper}} {{=data.method.path}}`
+
+{{? data.operation.operationId}}
+标识：`{{= data.operation.operationId }}`
+{{?}}
+
+#### 请求参数列表
+
+{{? data.parameters && data.parameters.length }}
+{{#def.parameters}}
+{{?}}
+
+#### 响应参数列表
+
+{{#def.responses}}
+
+#### 示例
+
+请求
+
+{{? data.operation.requestBody}}
+
+{{? data.bodyParameter.exampleValues.description }}
+{{= data.bodyParameter.exampleValues.description }}
+{{?}}
+
+{{= data.utils.getBodyParameterExamples(data) }}
+{{?}}
+
+响应
+
+{{? data.responseSchemas }}
+{{= data.utils.getResponseExamples(data) }}
+{{?}}
+
+{{#def.callbacks}}
+
+{{= data.tags.endSection }}
