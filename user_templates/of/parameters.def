@@ -1,39 +1,42 @@
 {{= data.tags.section }}
+{{ var parameters = data.utils.queryParameterExplode(data); }}
 
 |参数|位置|类型|必须|说明|
 |---|---|---|---|---|
-{{~ data.parameters :p}}|{{=p.name}}|{{=p.in}}|{{=p.safeType}}|{{=p.required}}|{{=p.shortDesc || 'none'}}|
+{{~ parameters :p}}|{{=p.name}}|{{=p.in}}|{{=p.safeType}}|{{? p.required}}是{{?}}{{? !p.required}}否{{?}}|{{=p.shortDesc || ''}}|
 {{~}}
 
 {{? data.longDescs }}
 #### Detailed descriptions
-{{~ data.parameters :p}}{{? p.shortDesc !== p.description}}
+{{~ parameters :p}}{{? p.shortDesc !== p.description}}
 **{{=p.name}}**: {{=p.description}}{{?}}
 {{~}}
 {{?}}
 
-{{~ data.parameters :p}}
+{{~ parameters :p}}
 
 {{? p.schema && p.schema.enum }}
+{{ var i=0; var ds = p.schema['x-enum-descriptions'] || new Array(p.schema.enum.length); }}
 {{~ p.schema.enum :e}}
-{{ var entry = {}; entry.name = p.name; entry.value = e; data.enums.push(entry); }}
+{{ var entry = {}; entry.name = p.name; entry.value = e; entry.description = ds[i]||'';  ++i; data.enums.push(entry); }}
 {{~}}
 {{?}}
 
 {{? p.schema && p.schema.items && p.schema.items.enum }}
+{{ var i=0; var ds = p.schema['x-enum-descriptions'] || new Array(p.schema.enum.length); }}
 {{~ p.schema.items.enum :e}}
-{{ var entry = {}; entry.name = p.name; entry.value = e; data.enums.push(entry); }}
+{{ var entry = {}; entry.name = p.name; entry.value = e; entry.description = ds[i]||'';  ++i; data.enums.push(entry); }}
 {{~}}
 {{?}}
 
 {{~}}
 
 {{? data.enums && data.enums.length }}
-#### Enumerated Values
+#### 枚举值
 
-|Parameter|Value|
-|---|---|
-{{~ data.enums :e}}|{{=e.name}}|{{=data.utils.toPrimitive(e.value)}}|
+|字段|值|说明|
+|---|---|---|
+{{~ data.enums :e}}|{{=e.name}}|{{=data.utils.toPrimitive(e.value)}}|{{=e.description}}|
 {{~}}
 {{?}}
 {{= data.tags.endSection }}

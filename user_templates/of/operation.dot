@@ -17,7 +17,7 @@
 {{? data.operation.description}}{{= data.operation.description }}{{?}}
 
 {{? data.options.codeSamples || data.operation["x-code-samples"] }}
-> Code samples
+> 代码示例
 
 {{= data.utils.getCodeSamples(data) }}
 {{?}}

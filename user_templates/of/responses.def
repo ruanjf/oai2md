@@ -15,9 +15,9 @@
 {{? response.content && !response.$ref && !data.utils.isPrimitive(response.type)}}
 {{? Object.keys(response.content).length }}
 {{ var responseKey = Object.keys(response.content)[0]; }}
-{{ var responseSchema = response.content[responseKey].schema; }}
+{{ var responseSchema = data.utils.schemaDotDisplayName(data.utils.unWrapMsgSchema(response.content[responseKey].schema)); }}
 {{ var enums = []; }}
-{{ var blocks = data.utils.schemaToArray(responseSchema,0,{trim:true,join:true},data); }}
+{{ var blocks = data.utils.filterSchemaArrayMapProp(data.utils.schemaToArray(responseSchema,0,{trim:true,join:true},data)); }}
 {{ for (var block of blocks) {
      for (var p of block.rows) {
        if (p.schema && p.schema.enum) {
@@ -33,14 +33,15 @@
 }}
 
 {{? blocks[0].rows.length || blocks[0].title }}
-Status Code **{{=response.status}}**
+状态码 **{{=response.status}}**
 
 {{~ blocks :block}}
 {{? block.title }}*{{=block.title}}*
 {{?}}
-|字段|类型|必须|限制|说明|
+
+|字段|类型|必须|说明|
 |---|---|---|---|---|
-{{~block.rows :p}}|{{=p.displayName}}|{{=p.safeType}}|{{=p.required}}|{{=p.restrictions||'none'}}|{{=p.description||'none'}}|
+{{~block.rows :p}}{{ var safeType = p.safeType; if (p.schema.type === 'object' && p.schema['x-type-map']) { safeType = '{'+safeType+'}'; } }}|{{= p.schema['x-display-name'] || p.displayName }}|{{=safeType}}|{{? p.required}}是{{?}}{{? !p.required}}否{{?}}|{{=p.description||''}}|
 {{~}}
 {{~}}
 {{?}}
@@ -57,7 +58,6 @@ Status Code **{{=response.status}}**
 {{?}}
 
 {{ data.response = response; }}
-{{#def.links}}
 
 {{?}}
 {{~}}

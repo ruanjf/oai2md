@@ -18,9 +18,99 @@ module.exports = function(input, outfile, argv, doFinish) {
     options.source = sourceUrl;
     options.templateCallback = function(templateName,stage,data) {
         if (stage === 'pre') {
+            // 横杠命名转驼峰
             data.utils.dashToCamel = s => {
                 return s.replace(/-\w/g, m => m.substring(1).toUpperCase())
             }
+            // 移除返回值包裹
+            data.utils.unWrapMsgSchema = schema => {
+                if (argv.data_unwrap && schema['x-md-is-msg-wrap']) {
+                    return schema.properties['data']
+                }
+                return schema;
+            }
+            // 拼接多级属性名称
+            data.utils.schemaDotDisplayName = (schema, parent) => {
+                if (parent) {
+                    let pn = parent['x-display-name'];
+                    let name = schema['x-name']
+                    schema['x-display-name'] = pn ? (pn + '.' + name) : name
+                } else {
+                    delete schema['x-display-name'];
+                    delete schema['x-name'];
+                }
+
+                if (schema.type === 'object') {
+                    if (schema.properties) {
+                        for (let [k,v] of Object.entries(schema.properties)) {
+                            v['x-name'] = k
+                            data.utils.schemaDotDisplayName(v, schema)
+                        }
+                    } else if (schema.additionalProperties) {
+                        let dn = (schema['x-display-name'] || '')
+                        if (schema.additionalProperties.type === 'object') {
+                            dn += '{}'
+                        } else if (schema.additionalProperties.type === 'array') {
+                            dn += '[]'
+                        }
+                        schema.additionalProperties['x-name'] = dn
+                        schema.additionalProperties['x-type-map'] = true
+                        data.utils.schemaDotDisplayName(schema.additionalProperties, {})
+                        if (parent) {
+                            schema.additionalProperties['x-display-name'] = schema['x-display-name']
+                        } else {
+                            schema.additionalProperties['x-display-name'] = '*'+data.translations.anonymous+'*'
+                        }
+                    }
+                } else if (schema.type === 'array' && schema.items) {
+                    schema.items['x-name'] = (schema['x-display-name'] || '') + '[]'
+                    data.utils.schemaDotDisplayName(schema.items, {})
+                    if (!parent) {
+                        delete schema.items['x-display-name']
+                    }
+                }
+                return schema;
+            }
+            // 展开请求的Query参数
+            data.utils.queryParameterExplode = data => {
+                let ins = ['query', 'body']
+                return data.parameters
+                    .flatMap(p => {
+                        if (p.schema && p.schema.type === 'object' && ins.indexOf(p.in) > -1) {
+                            let blocks = data.utils.schemaToArray(data.utils.schemaDotDisplayName(p.schema),0,{trim:true,join:true},data)
+                            let rows = blocks[0] ? blocks[0].rows : []
+                            for (let o of rows) {
+                                o.in = p.in
+                                o.shortDesc = o.description
+                                if (o['x-display-name']) {
+                                    o.name = o['x-display-name']
+                                }
+                            }
+                            return rows;
+                        }
+                        return [p]
+                    })
+            }
+            // 移除重复多级属性map字段
+            data.utils.filterSchemaArrayMapProp = blocks => {
+                for (let block of blocks) {
+                    if (!block.rows) {
+                        continue
+                    }
+                    block.rows = block.rows.filter((v,i) => {
+                        if (v.depth === 1 && v.schema.type === 'object' && v.schema.additionalProperties) {
+                            let n = block.rows[i+1]
+                            if (n && n.depth === 2 && n.schema['x-type-map'] 
+                                    && (n.schema === v.schema.additionalProperties || n.schema['x-display-name'] === v.schema.additionalProperties['x-display-name'])) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    })
+                }
+                return blocks;
+            }
+
             let keyTagBaseUrl = 'x-base-url';
             for (let tag of data.api.tags) {
                 let tbu = tag[keyTagBaseUrl];
@@ -43,6 +133,9 @@ module.exports = function(input, outfile, argv, doFinish) {
                 .filter(o => !!o && o.schema);
             // 去重
             contents = Array.from(new Set(contents));
+            let tmp_cs = contents.map(o => o.schema)
+            let schemasForComp = Object.entries(data.api.components.schemas)
+                .filter(([k,v]) => tmp_cs.indexOf(v) < 0)
 
             // 引用对象属性不展开
             let toRef = o => {
@@ -63,11 +156,41 @@ module.exports = function(input, outfile, argv, doFinish) {
             }
             // 合并只包含allOf的Schema
             let mergeOneAllOf = o => {
-                if (!o || !o.allOf || Object.keys(o).filter(o => o.endsWith('Of')).length > 1) {
+                if (!o) {
                     return o;
                 }
-                let schema = o.allOf.reduce((acc,v) => Object.assign({}, acc, v, {properties: Object.assign({}, acc.properties || {}, v.properties || {})}), {type:'object'});
-                delete schema[keyOldRef]
+                if (o.type === 'array' && o.items) {
+                    let ref = o.items[keyOldRef];
+                    o.items = mergeOneAllOf(o.items);
+                    if (ref) {
+                        o.items[keyOldRef] = ref
+                    }
+                    return o;
+                }
+                let schema;
+                if (o.allOf && Object.keys(o).filter(o => o.endsWith('Of')).length === 1) {
+                    schema = o.allOf
+                        .map(o => o.$ref ? data.components.schemas[o.$ref.replace('#/components/schemas/','')] : o)
+                        .filter(o => o != null)
+                        .reduce((acc,v) => Object.assign({}, acc, v, {properties: Object.assign({}, acc.properties || {}, v.properties || {})}), {type:'object'});
+                    if (o.allOf[0] && o.allOf[0][keyOldRef] === '#/components/schemas/Msg') {
+                        schema['x-md-is-msg-wrap'] = true
+                    }
+                    delete schema['description']
+                    delete schema['$ref']
+                    delete schema[keyOldRef]
+                    if (o.description) {
+                        schema.description = o.description;
+                    }
+                    if (o.$ref) {
+                        schema.$ref = o.$ref
+                    }
+                    if (o[keyOldRef]) {
+                        schema[keyOldRef] = o[keyOldRef]
+                    }
+                } else {
+                    schema = o;
+                }
                 toRef(schema)
                 if (schema.properties) {
                     for (let [k, v] of Object.entries(schema.properties)) {
@@ -84,6 +207,10 @@ module.exports = function(input, outfile, argv, doFinish) {
             contents
                 .filter(o => o.schema.properties)
                 .forEach(o => toRef(o.schema));
+            schemasForComp.forEach(([k,v]) => data.api.components.schemas[k] = mergeOneAllOf(v));
+            Object.values(data.api.components.schemas)
+                .filter(o => o.properties)
+                .forEach(o => toRef(o));
         }
         return data
     };

@@ -59,8 +59,8 @@ Base URLs:
 ## Schemas
 
 {{ for (var s in data.components.schemas) { }}
-{{ var origSchema = data.components.schemas[s]; }}
-{{ var schema = data.api.components.schemas[s]; }}
+{{ var origSchema = data.utils.schemaDotDisplayName(data.components.schemas[s]); }}
+{{ var schema = data.utils.schemaDotDisplayName(data.api.components.schemas[s]); }}
 
 {{= data.tags.section }}
 ### {{=s}}
@@ -69,7 +69,7 @@ Base URLs:
 {{?}}
 
 {{ var enums = []; }}
-{{ var blocks = data.utils.schemaToArray(origSchema,-1,{trim:true,join:true},data); }}
+{{ var blocks = data.utils.filterSchemaArrayMapProp(data.utils.schemaToArray(schema,0,{trim:true,join:true},data)); }}
 {{ for (var block of blocks) {
      for (var p of block.rows) {
        if (p.schema && p.schema.enum) {
@@ -105,9 +105,9 @@ Base URLs:
 字段列表
 {{?}}
 
-{{? block.rows.length}}|字段|类型|必须|限制|说明|
+{{? block.rows.length}}|字段|类型|必须|说明|
 |---|---|---|---|---|{{?}}
-{{~ block.rows :p}}|{{=p.displayName}}|{{=p.safeType}}|{{=p.required}}|{{=p.restrictions||'none'}}|{{=p.description||'none'}}|
+{{~ block.rows :p}}{{ var safeType = p.safeType; if (p.schema.type === 'object' && p.schema['x-type-map']) { safeType = '{'+safeType+'}'; } }}|{{=p.schema['x-display-name'] || p.displayName}}|{{=safeType}}|{{? p.required}}是{{?}}{{? !p.required}}否{{?}}|{{=p.description||''}}|
 {{~}}
 {{~}}
 {{? (blocks[0].rows.length === 0) && (blocks.length === 1) }}
