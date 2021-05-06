@@ -41,7 +41,7 @@
 
 |字段|类型|必须|说明|
 |---|---|---|---|---|
-{{~block.rows :p}}{{ var safeType = p.safeType; if (p.schema.type === 'object' && p.schema['x-type-map']) { safeType = '{'+safeType+'}'; } }}|{{= p.schema['x-display-name'] || p.displayName }}|{{=safeType}}|{{? p.required}}是{{?}}{{? !p.required}}否{{?}}|{{=p.description||''}}|
+{{~block.rows :p}}{{ var safeType = p.safeType; if (p.schema['x-type-map']) { safeType = '{'+safeType+'}'; } }}|{{= p.schema['x-display-name'] || p.displayName }}|{{=safeType}}|{{? p.required}}是{{?}}{{? !p.required}}否{{?}}|{{=p.description||''}}|
 {{~}}
 {{~}}
 {{?}}

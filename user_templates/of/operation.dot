@@ -1,9 +1,10 @@
 {{= data.tags.section }}
+
+### {{= data.operationUniqueName}}
+
 {{? data.resources && data.operation.tags && data.operation.tags.length > 0 }}
 <!-- [{{= data.resources[data.operation.tags[0]].description }}]({{= data.operation.tags[0] }}) -->
 {{?}}
-
-### {{= data.operationUniqueName}}
 
 {{ data.methodUpper = data.method.verb.toUpperCase(); }}
 {{ data.url = data.utils.slashes(data.baseUrl + data.method.path); }}

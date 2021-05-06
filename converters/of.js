@@ -47,13 +47,7 @@ module.exports = function(input, outfile, argv, doFinish) {
                             data.utils.schemaDotDisplayName(v, schema)
                         }
                     } else if (schema.additionalProperties) {
-                        let dn = (schema['x-display-name'] || '')
-                        if (schema.additionalProperties.type === 'object') {
-                            dn += '{}'
-                        } else if (schema.additionalProperties.type === 'array') {
-                            dn += '[]'
-                        }
-                        schema.additionalProperties['x-name'] = dn
+                        schema.additionalProperties['x-name'] = (schema['x-display-name'] || '') + '{}'
                         schema.additionalProperties['x-type-map'] = true
                         data.utils.schemaDotDisplayName(schema.additionalProperties, {})
                         if (parent) {
@@ -63,7 +57,11 @@ module.exports = function(input, outfile, argv, doFinish) {
                         }
                     }
                 } else if (schema.type === 'array' && schema.items) {
-                    schema.items['x-name'] = (schema['x-display-name'] || '') + '[]'
+                    let n = (schema['x-display-name'] || '')
+                    if (n && schema['x-type-map']) {
+                        n += "."
+                    }
+                    schema.items['x-name'] = n + '[]'
                     data.utils.schemaDotDisplayName(schema.items, {})
                     if (!parent) {
                         delete schema.items['x-display-name']
@@ -76,6 +74,9 @@ module.exports = function(input, outfile, argv, doFinish) {
                 let ins = ['query', 'body']
                 return data.parameters
                     .flatMap(p => {
+                        if (p.depth) { // 忽略已展开的字段，
+                            return []
+                        }
                         if (p.schema && p.schema.type === 'object' && ins.indexOf(p.in) > -1) {
                             let blocks = data.utils.schemaToArray(data.utils.schemaDotDisplayName(p.schema),0,{trim:true,join:true},data)
                             let rows = blocks[0] ? blocks[0].rows : []
