@@ -1,9 +1,9 @@
 {{= data.tags.section }}
 
-### {{= data.operationUniqueName}}
-
+### {{= data.operation.summary}}
+<!-- title_and_key [{{= data.operation.summary}}]({{= data.operationUniqueName}}) -->
 {{? data.resources && data.operation.tags && data.operation.tags.length > 0 }}
-<!-- [{{= data.resources[data.operation.tags[0]].description }}]({{= data.operation.tags[0] }}) -->
+<!-- tag [{{= data.resources[data.operation.tags[0]].description }}]({{= data.operation.tags[0] }}) -->
 {{?}}
 
 {{ data.methodUpper = data.method.verb.toUpperCase(); }}

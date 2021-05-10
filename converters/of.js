@@ -11,7 +11,7 @@ module.exports = function(input, outfile, argv, doFinish) {
 
     let options = {};
     options.codeSamples = false;
-    options.tocSummary = true;
+    options.tocSummary = false;
     options.omitHeader = true;
     options.sample = true;
     options.user_templates = path.resolve(__dirname, '..', 'user_templates', 'of');

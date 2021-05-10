@@ -63,10 +63,8 @@ Base URLs:
 {{ var schema = data.utils.schemaDotDisplayName(data.api.components.schemas[s]); }}
 
 {{= data.tags.section }}
-### {{=s}}
-{{? schema.description }}
-<!-- [{{= schema.description }}]({{= s }}) -->
-{{?}}
+### {{= schema.description || s}}
+<!-- title_and_key [{{= schema.description }}]({{= s }}) -->
 
 {{ var enums = []; }}
 {{ var blocks = data.utils.filterSchemaArrayMapProp(data.utils.schemaToArray(schema,0,{trim:true,join:true},data)); }}

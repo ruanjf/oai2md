@@ -104,22 +104,18 @@ function mdSplitToFiles(argv, api, out) {
                     if (child.lines.length === 0) {
                         md.push('* ' +child.head)
                     } else {
-                        let nt = child.lines.filter(s => s.startsWith('<!-- [')).map(s => s.match(/^<!-- \[(.*?)\]\((.*?)\) -->$/))[0]
-                        if (nt && nt[2] !== tag[2]) {
-                            tag = nt
-                            if (!isSchema) {
+                        let fn = null;
+                        if (isSchema) {
+                            fn = (child.key || child.head) + '.md'
+                        } else {
+                            fn = child.key ? `${child.key}.md` : `${String(1000 + ++index).substring(1)}_${tag[2] || nodeHead}.md`
+                            let nt = child.lines.filter(s => s.startsWith('<!-- tag [')).map(s => s.match(/^<!-- tag \[(.*?)\]\((.*?)\) -->$/))[0]
+                            if (nt && nt[2] !== tag[2]) {
+                                tag = nt
                                 md.push('', '### ' + tag[1], '')
                             }
                         }
-                        let fn = null;
-                        if (isSchema) {
-                            tag = nt || []
-                            fn = child.head + '.md'
-                            md.push(`* [${tag[1] || child.head}](./${nodeHead}/${fn})`)
-                        } else {
-                            fn = `${String(1000 + ++index).substring(1)}_${tag[2] || nodeHead}.md`
-                            md.push(`* [${child.head}](./${nodeHead}/${fn})`)
-                        }
+                        md.push(`* [${child.head}](./${nodeHead}/${fn})`)
                         let h = ['---', 'title: '+child.head, '---']
                         let cl = child.lines
                             .map(s => s.replace(/^##/, ''))
@@ -141,6 +137,7 @@ function mdTree(level, file) {
     let lines = s.split(/\r?\n/)
     let block = root = {
         head: null,
+        key: null,
         level: 0,
         start: 0,
         end: null,
@@ -155,12 +152,17 @@ function mdTree(level, file) {
         if (codes % 2 === 0 && (hd = head_regex.exec(line)) !== null && hd[0].length <= level) {
             let new_block = {
                 head: line.substring(hd[0].length).trim(),
+                key: null,
                 level: hd[0].length,
                 start: i,
                 end: null,
                 lines: [],
                 parent: null,
                 children: []
+            }
+            let tkMatch = lines[i+1] && lines[i+1].startsWith('<!-- title_and_key [') ? lines[i+1].match(/^<!-- title_and_key \[(.*?)\]\((.*?)\) -->$/) : null
+            if (tkMatch && tkMatch[1] === new_block.head) {
+                new_block.key = tkMatch[2]
             }
             let node = block
             while (node && node.level >= new_block.level) { // 获取上级目录
