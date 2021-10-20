@@ -18,7 +18,8 @@
     "oai2md": "./bin/oai2md"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "publish": "npm version patch && npm publish"
   },
   "license": "ISC",
   "engines": {
