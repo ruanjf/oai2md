@@ -23,7 +23,7 @@
 {{?}}
 
 {{? p.schema && p.schema.items && p.schema.items.enum }}
-{{ var i=0; var ds = p.schema['x-enum-descriptions'] || new Array(p.schema.enum.length); }}
+{{ var i=0; var ds = p.schema.items['x-enum-descriptions'] || new Array(p.schema.items.enum.length); }}
 {{~ p.schema.items.enum :e}}
 {{ var entry = {}; entry.name = p.name; entry.value = e; entry.description = ds[i]||'';  ++i; data.enums.push(entry); }}
 {{~}}
